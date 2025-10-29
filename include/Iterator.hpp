@@ -1,26 +1,53 @@
+#pragma once
+#include <cassert>
 #include "Promise.hpp"
+#include "Command.hpp"
+#include "Guard.hpp"
 
-template <typename T>
-class GeneratorIterator
+namespace coro
 {
-public:
-    using self_type = GeneratorIterator<T>;
-    using self_ref = GeneratorIterator<T>&;
-    using promise_type = GeneratorPromise<T>;
-    using handle_t = std::coroutine_handle<promise_type>;
-
-    GeneratorIterator(handle_t handle) : handle_(handle) {}
-
-    T& operator*() const { return handle_.promise().value_; }
-
-    self_ref operator++()
+    template <typename T>
+    class GeneratorIterator
     {
-        assert(not handle_.done());
-        handle_.resume();
-        return *this;
-    }
+    public:
+        using self = GeneratorIterator<T>;
+        using ref = self&;
+        using const_ref = const self&;
 
-    
-private:
-    handle_t handle_;
-};
+
+        using promise_type = GeneratorPromise<T>;
+        using handle_t = std::coroutine_handle<promise_type>;
+
+        GeneratorIterator(CoroHandleGuard<promise_type> handle) : handle_(std::move(handle)) {}
+
+        GeneratorIterator(self&& other) noexcept : handle_(Tools::exchange(other.handle_, nullptr)) {}
+
+        const T& operator*() const { return handle_.promise().result(); }
+        
+        T& operator*() { return handle_.promise().result(); }
+
+        ref operator++() {
+            assert(not handle_.done());
+            handle_.resume();
+            return *this;
+        }
+        
+        void operator++(int){
+            ++*this;
+        }
+        
+
+        ref operator=(self&& other) noexcept{
+            handle_ = Tools::exchange(other.handle_, nullptr);
+            return *this;
+        }
+        // end() of the range
+        friend bool operator==(const_ref a, std::default_sentinel_t){
+            return a.handle_.done();
+        }
+
+    private:
+        CoroHandleGuard<promise_type> handle_;
+    };
+
+}

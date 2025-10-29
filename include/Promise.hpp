@@ -19,7 +19,9 @@ namespace coro
     class LazyFunction;
 
     template <typename T>
-    class GeneratorPromise;
+    class Generator;
+
+    
 
     // Promise Type For normal function object
     // this promise type will not suspend and will return the result of the coroutine
@@ -53,7 +55,9 @@ namespace coro
             result_ = value;
         }
 
-        T result() const { return result_; }
+        const T& result() const { return result_; }
+
+        T& result() { return result_; }
     private:
         T result_;
 
@@ -88,7 +92,9 @@ namespace coro
             result_ = value;
         }
 
-        T result() const { return result_; }
+        const T& result() const { return result_; }
+
+        T& result() { return result_; }
     private:
         T result_;
 
@@ -128,10 +134,14 @@ namespace coro
             result_ = T{};
         }
 
-        T result() const { return result_; }
+        const T& result() const { return result_; }
+
+        T& result() { return result_; }
     private:
         T result_;
 
     };
+
+    
     
 }

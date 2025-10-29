@@ -1,6 +1,7 @@
 #pragma once
 #include "Promise.hpp"
 #include "Guard.hpp"
+#include "Iterator.hpp"
 
 namespace coro
 {
@@ -11,6 +12,9 @@ namespace coro
         // Store the coroutine handle
         using promise_type = GeneratorPromise<T>;
         using handle_t = std::coroutine_handle<promise_type>;
+
+        using iterator = GeneratorIterator<T>;
+
         Generator(handle_t handle)
         : handle_(handle) 
         {}
@@ -24,6 +28,17 @@ namespace coro
 
         T get() {
             return handle_.promise().result_;
+        }
+
+        iterator begin()
+        {
+            handle_.resume();
+            return iterator(std::move(handle_));
+        }
+
+        std::default_sentinel_t end()
+        {
+            return {};
         }
     private:
         CoroHandleGuard<promise_type> handle_;

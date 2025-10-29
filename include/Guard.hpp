@@ -42,6 +42,12 @@ namespace coro
         {
             return handle_.done();
         }
+        // detach the coroutine handle and return it
+        // give the ownership of the coroutine to the caller
+        std::coroutine_handle<> detach()
+        {
+            return Tools::exchange(handle_, nullptr);
+        }
 
         ~CoroHandleGuard()
         {
